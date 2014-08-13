@@ -19,17 +19,20 @@ app.use(express.methodOverride());
 app.use(app.router);
 app.use(express.errorHandler());
 
-// We'll use this key as a prefix for all subscriptions
-var KEY_PREFIX = 'techtalk:demo:';
+
+var KEY_PREFIX = 'techtalk:demo:'; // We'll use this key as a prefix for all subscriptions
+var redisPort = process.env.REDIS_PORT || 6379;
+var redisHost = process.env.REDIS_HOST || '127.0.0.1';
+
 
 // Create the redis clients (we need different clients for publishing and subscribing)
-var subscribeClient = redis.createClient(6379, '127.0.0.1');
+var subscribeClient = redis.createClient(redisPort, redisHost);
 subscribeClient.on('message', function (channel, message) {
     // This is where we would handle an event, when one that we subscribed to has fired
     console.log('\n\n*************\n\nReceived event',channel.replace(KEY_PREFIX,''),'\n\n',message,'\n\n**************');
 });
 
-var publishClient = redis.createClient(6379, '127.0.0.1');
+var publishClient = redis.createClient(redisPort, redisHost);
 
 
 // REST interface for adding a subscription
@@ -55,5 +58,6 @@ app.post('/notify', function (req, res) {
 
 // Start the REST service
 http.createServer(app).listen(app.get('port'), function () {
-    console.log('Express server listening on port ' + app.get('port'));
+    console.log('  Express server listening on port ' + app.get('port'));
+    console.log('  Redis connected on ' + redisHost + ':' + redisPort);
 });
